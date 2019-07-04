@@ -1,0 +1,13 @@
+ki-sut
+
+0	none
+
+1	Lai yai			R7, R8
+2	Lai yai			R8 only
+
+3	Lai sootsanaen	L6(R3), L8
+4	Lai noi/soi		R6, R8
+5	Lai bo sai		L1, L8
+
+6	[e] mode		R5, R7
+

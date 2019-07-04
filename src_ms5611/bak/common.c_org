@@ -1,0 +1,74 @@
+// common.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include "common.h"
+
+int wiringpi_setup_flag = 0;
+
+///////////////////////////////////////////
+int r_strcmp(const void *a, const void *b )
+{	//reverse
+	return -1 * strcmp((char*)a, (char*)b);	
+}
+void del_file(char *path, int limit)
+{
+    char c_str[STR_LEN * MAX_FILE_NUM];
+    char *pName;
+    struct dirent *ent; 
+    int cnt = 0, cnt2;
+    char tmp_str[STR_LEN];
+
+    DIR *pDir = opendir(path);
+    if (pDir == NULL) return;
+    //count
+    while ((ent = readdir(pDir)) != NULL) {
+        if (ent->d_type & DT_REG ){
+		cnt++;
+	}
+    }
+#if 0
+    printf("cnt:%d\n", cnt);
+#endif
+    if ( cnt > MAX_FILE_NUM){
+	cnt = MAX_FILE_NUM;
+    }else if ( cnt <= limit){
+        closedir(pDir);
+	return;
+    }
+    pName = c_str;
+    rewinddir(pDir);
+    //get file name
+    while ((ent = readdir(pDir)) != NULL) {
+        if (ent->d_type & DT_REG ){
+		sprintf(pName, "%s", ent->d_name);
+		pName += STR_LEN;
+	}
+    }
+#if 0
+    cnt2 = cnt;
+    for (pName = c_str; cnt2 > 0; cnt2--, pName += STR_LEN){
+	printf("%s**\n", pName);
+    }
+    printf("\n");
+#endif
+    closedir(pDir);
+
+    qsort(c_str, cnt, STR_LEN, r_strcmp);
+#if 0
+    for (cnt2 = cnt, pName = c_str; cnt2 > 0; cnt2--, pName += STR_LEN){
+	printf("%s**\n", pName);
+    }
+#endif
+    for (cnt2 = limit, pName = c_str + cnt2 * STR_LEN;
+	 cnt2 < cnt; cnt2++, pName += STR_LEN){
+	sprintf(tmp_str, "%s/%s", path, pName);
+#if 1
+	remove(tmp_str);
+#else
+	printf("del:%s**\n", pName);
+#endif
+    }
+}

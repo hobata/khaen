@@ -1,0 +1,30 @@
+/* btn.h */
+
+#ifndef _BTN_H_
+#define _BTN_H_
+
+#define BTN_LOCK 2
+#define BTN_ON	1
+#define BTN_OFF	0
+#define BTN_NUM	4
+
+typedef struct {
+        int8_t color_index;
+        int8_t prev;
+        struct timeval ti;
+} color_t;
+typedef void (*MENUPTR)(void);
+typedef struct {
+	MENUPTR func;
+	int n_sts;
+} menu_t;
+
+//wPi No.
+#define RED	21
+#define BLUE	22
+#define GREEN	23
+#define YELLOW 	25
+
+int btn_init(void);
+
+#endif /* _BTN_H_ */

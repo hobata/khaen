@@ -1,0 +1,72 @@
+Software setup
+http://www.customelectronics.co.uk/rpihq.htm
+
+First we need to disable the onboard sound by editing alsa-blacklist.conf:
+
+sudo nano /etc/modprobe.d/alsa-blacklist.conf
+
+add:
+
+blacklist snd_bcm2835
+
+Save and exit (^X, Y, enter).
+
+Now, to set the IO, edit config.txt:
+
+sudo nano /boot/config.txt
+
+Add:
+
+dtoverlay=hifiberry-dac
+
+Remove or comment (#) the line:
+
+dtparam=audio=on
+
+Leave the line:
+
+#dtparam=i2s=on
+commented out.
+
+Save and exit (^X, Y, enter).
+
+Next add some alsa (sound) configuration:
+
+sudo nano /etc/asound.conf
+
+Paste the text below:
+
+pcm.!default {
+	type hw
+	card 0
+}
+
+ctl.!default {
+	type hw
+	card 0
+}
+
+Save and exit (^X, Y, enter).
+
+It is no harm to do a reboot. So:
+
+sudo reboot
+
+Test if everything is OK:
+
+aplay -l
+
+This should return:
+
+**** List of PLAYBACK Hardware Devices ****
+card 0: sndrpihifiberry [snd_rpi_hifiberry_dac], device 0: HifiBerry DAC HiFi pcm5102a-hifi-0 []
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+If you have an amplifier you can connect via a phono lead you can now test it via: speaker-test -D<device name> -c<channel count> -twav So:
+
+speaker-test -D default -c 2 -twav
+
+This is a continuous test saying ‘front left’ and ‘front right’ alternately from the appropriate speakers.
+Enter ^C to stop.
+
