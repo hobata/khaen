@@ -20,6 +20,8 @@
 
 extern int wiringpi_setup_flag;
 extern char lbuf[];
+volatile uint32_t press_val;
+volatile uint16_t temp_val; 
 
 static char strbuf[512];
 static volatile uint16_t key_val = 0;
@@ -173,17 +175,20 @@ PI_THREAD (key_loop)
 #endif	
 	while(1){
 		cnt++;
-		cnt %= 1000;
+		cnt %= 2000;
 		if (cnt == 0){
 			loop++;
-			log_prt("loop key %dk, press %dk\n", loop, loop*2);
+			log_prt("loop key %dk, press %dk, %d, %d\n",
+				loop*2, loop*2, press_val, temp_val);
 		}
-		//usleep(KEY_INT_USEC);
+		//usleep(KEY_INT_USEC); //sleep inside get_val
 		get_val(); //press.c
 		dis_chatter(0);	
-		//usleep(KEY_INT_USEC);
+		dis_chatter(1);	
+		//usleep(KEY_INT_USEC); //sleep inside get_val
 		get_val(); //press.c
 		dis_chatter(1);	
+		dis_chatter(0);	
 	}
 }
 int key_init(void)

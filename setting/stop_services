@@ -1,0 +1,6 @@
+sudo systemctl disable wpa_supplicant
+sudo systemctl disable triggerhappy
+sudo systemctl disable dhcpcd
+sudo systemctl disable keyboard-setup
+sudo systemctl disable dphys-swapfile.service
+sudo systemctl disable getty@tty1

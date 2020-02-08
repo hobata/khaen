@@ -19,7 +19,8 @@
 #include "rec.h"
 #include "pcm.h"
 #include "cos_tbl.h"
-#include "compress.h"
+#include "cmp.h"
+#include "midi.h"
 
 static char strbuf[512];
 extern int wiringpi_setup_flag;
@@ -27,11 +28,13 @@ CAL_DATA_T cal_data;
 
 volatile uint32_t press_val = 0; /* get measured pressure */
 volatile uint32_t press_diff = 0;
+volatile uint32_t press_diff_prev = 0;
 volatile uint32_t press_std = 0;
 volatile int    press_std_flag = 0; /* get standard pressure */
 volatile uint16_t temp_val = 0; /* get measured temperature */
 
 extern int unshi_mode;
+extern int pcm_read_cnt;
 
 static int cmdSPI(unsigned char addr);
 int get_val(void);
@@ -87,11 +90,14 @@ static int readSPIm(unsigned char addr, unsigned char **data, int len)
 
 void press_set_auto_zero(int flag)
 {
-	if (read_key()){
-		log_prt("read_key=0x%x:press_set_auto_zero() return\n",
-			read_key() );
+#if 1
+	/* exist_key and not first */
+	if (read_key() && press_std != 0 ){
+		log_prt("read_key=0x%x:flag:%d, press_set_auto_zero() return\n",
+			flag, read_key() );
 		return;
 	}
+#endif
 	piLock(PRESS_LOCK);
 	press_std_flag = 1 | flag;
 	piUnlock(PRESS_LOCK);
@@ -133,7 +139,9 @@ int press_init(void)
         rec_init();
         monitor_init();
 	//audio compressor
-        cmp_init(10, 10, 32768/8*5, 30);
+        //cmp_init(20, 100, 32768/8*5, 30);
+	//cmp_init();
+	midi_init();
 
         if (wiringpi_setup_flag == 0){
                 wiringPiSetup();
@@ -151,7 +159,7 @@ int press_init(void)
 
 	/* RESET */
 	cmdSPI(MS_RESET);
-	usleep(3000);
+	usleep(5000);
 
 	/* READ_PROM */
 	CAL_DATA_T* g = &cal_data;
@@ -194,6 +202,7 @@ int press_init(void)
                 exit(1);
         }
 #endif
+	usleep(10000);
 	log_prt("end:press_init\n");
 	return 0;
 }
@@ -249,25 +258,35 @@ uint16_t temp_read(void)
 	piUnlock(PRESS_LOCK);
 	return tmp;
 }
-static uint32_t press_hist(int mea, int std)
+static uint32_t press_hist(uint32_t mea, uint32_t std)
 {
+        press_diff_prev = press_diff;
+        /* reset pcm read counter */
+        pcm_read_cnt = 0;
+
+	/* breathe out (exhale) */
 	if ( mea > std){
-	  return (uint32_t)(mea - std);
-	}else{
-#if 0
-	  return (uint32_t)( (double)(std - mea) * 1.2 );
-#else
-	  return (uint32_t)(std - mea);
-#endif
+	  return mea - std;
 	}
+	/* breathe in (inhale) */
+	return std - mea;
 }
 int get_val(void) /* get value from device */
 {
 	uint32_t	press; //pressure value(hPa)  1017*100
-	uint16_t	temp;  // temperature
+	uint16_t	temp = 0;  // temperature
 //	static int cnt = 0;
 
 	read_press_temp(&press, &temp);
+#if 0
+	if ( press > 0xf0000000 ){
+		log_prt("reverse press val\n");
+		press_std_flag = 2; /* force reset diff */
+		usleep(5000);
+		read_press_temp(&press, &temp);
+	}
+#endif
+
 #if 0
 	cnt++;
 	cnt %= 1000;
@@ -282,10 +301,11 @@ int get_val(void) /* get value from device */
 	/* renew standard value */
 	if ( press_std_flag ){
 		//printf("set standard, press:0x%x\n", press);
-		if ( (PRESS_AUTO_DIFF_MAX < abs((int)press - press_std))
+		//if ( (PRESS_AUTO_DIFF_MAX < abs((int)press - press_std))
+		if ( (PRESS_AUTO_DIFF_MAX > abs((int)press - press_std))
 			|| (press_std_flag & PRESS_AUTO_DIFF_FORCE) ){
 			/* reset diff */
-			//printf("reset diff:0x%x\n", press);
+			log_prt("reset diff:0x%x\n", press);
 			press_std = press;
         		press_diff = 0;
 		}else{
@@ -335,9 +355,18 @@ static void ms5611_cal(CAL_DATA_T* cal_data,
 
 }
 
-int press_amp_factor(int* pfac)
+double dyn_press_diff(void)
 {
-	int tmp;
+        /* press sensor 500/sec  = 2msec */
+        /* PCM 48sample/msec */
+        if (pcm_read_cnt >= PCM_FULL_CNT) return press_diff;
+        return press_diff_prev + ((double)press_diff - press_diff_prev)
+                * ((double)pcm_read_cnt) / PCM_FULL_CNT;
+}
+
+int press_amp_factor(double* pfac)
+{
+	double tmp;
 
 	if (unshi_mode){
 		*pfac = PRESS_UNSHI_FAC;
@@ -345,7 +374,7 @@ int press_amp_factor(int* pfac)
 	}
 	piLock(PRESS_LOCK);
 	/* 1 hPa = 100 count, factor max is 1024 */
-	tmp = (press_diff << 10) / PRESS_MAX;
+	tmp = dyn_press_diff() * 1024 / PRESS_MAX;
 	piUnlock(PRESS_LOCK);
 
 	/* human ear adjustment */
@@ -354,7 +383,7 @@ int press_amp_factor(int* pfac)
 	if (tmp < PRESS_OFFSET){
 		tmp = 0;
 	} else if (tmp <= 1024-PRESS_OFFSET ){
-		tmp = ((tmp-PRESS_OFFSET)<<10)/(1024 - PRESS_OFFSET*2);
+		tmp = ((tmp-PRESS_OFFSET)*1024)/(1024 - PRESS_OFFSET);
 	} else tmp = 1024;
 #else
 	/* cosine table */
@@ -362,8 +391,8 @@ int press_amp_factor(int* pfac)
 		tmp = 0;
 	} else if ( tmp >= 1024){
 		tmp = 1024;
-	} else if (tmp >= 0 && tmp <= 1023){
-		tmp = cos_tbl[tmp];
+	} else if (tmp >= 0 && tmp < 1024){
+		tmp = cos_tbl[(int)tmp];
 	} 
 #endif
 

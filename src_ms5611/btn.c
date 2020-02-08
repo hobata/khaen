@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <string.h>
 #include <wiringPi.h>
 #include <sys/time.h>
@@ -11,10 +12,22 @@
 #include "log.h"
 #include "rec.h"
 #include "khaen.h"
+#include "conf.h"
 #include "btn.h"
 
 extern int wiringpi_setup_flag;
+extern int pcm_id;
 
+uint16_t mask_drone = 0;
+set_val_t setting[] = {
+	{0x0001, 0x0000, 0},
+	{0x0002, 0x0080, 1},
+	{0x0004, 0x00c0, 2},
+	{0x0008, 0x8000, 0},
+	{0x0010, 0xa000, 0},
+	{0x0020, 0x8100, 0},
+	{0x0030, 0x0050, 0},
+};
 static btn_onoff_t btn_onoff[BTN_NUM];
 
 static void calib(void)
@@ -57,13 +70,54 @@ static void restart(void)
 {
 	exit(0);
 }
-void vol_up(void)
+static void code(void)
 {
-//	khean_vol(1);
+	uint16_t ret = 0;
+	int i;
+	set_val_t *p;
+
+	log_prt("btn:code enter\n");
+	led_set(2, LED_ON);
+	while(!ret){
+                usleep(BTN_INT_USEC);
+		ret = read_key() & 0xff; /* key R1-8 only */
+	}
+	for (i=0, p = setting; i < sizeof(setting)/sizeof(set_val_t); p++, i++){
+		if (p->set_key & ret){
+			pcm_id =  p->code;
+			log_prt("btn:pcm_id:%d\n", pcm_id);
+			conf_key(pcm_id);
+			break;
+		}
+	}
+	led_set(2, LED_OFF);
+	/* else no setting */
+	restart();
 }
-void vol_down(void)
+
+static void drone(void)
 {
-//	khean_vol(-1);
+	uint16_t ret = 0;
+	int i;
+	set_val_t *p;
+
+	led_set(2, LED_ON);
+	log_prt("btn:drone enter\n");
+	while(!ret){
+                usleep(BTN_INT_USEC);
+		ret = read_key() & 0xff; /* R1-8 only */
+	}
+	for (i=0, p = setting; i < sizeof(setting)/sizeof(set_val_t); p++, i++){
+		if (p->set_key & ret){
+			mask_drone =  p->mask_drone;
+			conf_drone(mask_drone);
+			log_prt("btn:drone_mask:0x%x\n", mask_drone);
+			break;
+		}
+	}
+	led_set(2, LED_OFF);
+	/* return to normal */
+	unshi_off();
 }
 
 const int col_list[BTN_NUM] ={ RED, BLUE, GREEN, YELLOW };
@@ -75,10 +129,10 @@ static menu_t menu[][BTN_NUM] = {
 	{unshi_on,	1},
 	{shtdwn,	0},
 },
-{ /* unshi + volume */
+{ /* unshi + setting */
+	{drone,		0},
+	{code,		0},
 	{unshi_off,	0},
-	{restart,	0},
-	{NULL,		1},
 	{NULL,		1},
 },
 };

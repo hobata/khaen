@@ -1,6 +1,10 @@
 # For more options and information see
-# http://rpf.io/configtxtreadme
+# http://rpf.io/configtxt
 # Some settings may impact device functionality. See link above for details
+
+arm_freq=1000
+sdram_freq=500
+force_turbo=1
 
 # uncomment if you get no picture on HDMI for a default "safe" mode
 #hdmi_safe=1
@@ -23,14 +27,10 @@
 
 # uncomment if hdmi display is not detected and composite is being output
 #hdmi_force_hotplug=1
-# ignore EDID for VGA converter 
-# refer to https://hombre-nuevo.com/raspberrypi/raspberrypi0022/#h3_4
-hdmi_ignore_edid=0xa5000080
 
 # uncomment to force a specific HDMI mode (this will force VGA)
-# 1280x1024 60Hz
-hdmi_group=2
-hdmi_mode=35
+#hdmi_group=1
+#hdmi_mode=1
 
 # uncomment to force a HDMI mode rather than DVI. This can make audio work in
 # DMT (computer monitor) modes
@@ -45,12 +45,9 @@ hdmi_mode=35
 
 #uncomment to overclock the arm. 700 MHz is the default.
 #arm_freq=800
-arm_freq=1000
-sdram_freq=500
-force_turbo=1
 
 # Uncomment some or all of these to enable the optional hardware interfaces
-dtparam=i2c_arm=on
+dtparam=i2c_arm=on,i2c_arm_baudrate=400000
 dtparam=i2s=on
 dtparam=spi=on
 
@@ -64,3 +61,13 @@ dtparam=spi=on
 dtoverlay=hifiberry-dac
 enable_uart=0
 start_x=0
+
+[pi4]
+# Enable DRM VC4 V3D driver on top of the dispmanx display stack
+#dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+
+[all]
+gpu_mem=16
+disable_splash=1
+dtparam=act_led_trigger=heartbeat
