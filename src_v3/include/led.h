@@ -9,6 +9,7 @@
 #define PIN_NO1	0
 #define PIN_NO2 2	
 #define PIN_NO3 3
+#define PIN_PWR 25
 
 #define LED_ON	1
 #define LED_OFF	0

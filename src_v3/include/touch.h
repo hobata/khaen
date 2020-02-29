@@ -109,7 +109,7 @@ enum CY8_RegisterMap
   void t_restoreFactoryDefault(int fd);
   void t_softwareReset(int fd);
   void t_saveToFlash(int fd);
-
+  int pre_t_proc(void);
   
   // GPIO / buttons / sliders configuration
   void t_setupGPIO(int fd, int gpio0, int gpio1);

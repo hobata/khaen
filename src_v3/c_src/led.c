@@ -48,6 +48,10 @@ int led_init(void)
 	for (i=1; i<=3; i++){
 		led_set(i, LED_OFF);
 	}
+#if 0
+	pinMode (PIN_PWR, OUTPUT);
+	digitalWrite(PIN_PWR, LOW);
+#endif
 	log_prt("end:led_init\n");
 	return 0;
 }

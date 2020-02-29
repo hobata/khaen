@@ -6,9 +6,9 @@
 #define BTN_LOCK 2
 #define BTN_ON	1
 #define BTN_OFF	0
-#define BTN_NUM	5
+#define BTN_NUM	4
 
-#define BTN_INT_USEC	10000
+#define BTN_INT_USEC	30000
 #define BTN_CHATTERING_NUM	3
 
 typedef struct {

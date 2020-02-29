@@ -16,6 +16,7 @@
 #define PRESS_UNSHI_FAC	64 /* x / max(1024) */
 #define PRESS_OFFSET	50 /* zero or max width */
 #define PCM_FULL_CNT	16 /* PCM data num between presssure mea. interval */
+#define WAIT_PRESS_USEC	2000
 
 int press_init(void);
 uint32_t press_read(void);

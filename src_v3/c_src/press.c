@@ -115,14 +115,15 @@ PI_THREAD (pressThr)
 {
 	int cnt = 0; 
 	while(1){
+		usleep(WAIT_PRESS_USEC); 
 		get_val();
 #if 1
-		cnt %= 1000;
+		cnt %= 2000;
 		if ( cnt == 0){
-    			log_prt("cycle_1k:press:%d, temp:%d\n", 
+    			log_prt("cycle_2k:press:%d, temp:%d\n", 
 				press_val, temp_val );
 		}
-		cnt++;
+		cnt+=2;
 #endif
 	}
 }
@@ -195,7 +196,7 @@ int press_init(void)
                 log_prt("timerThread didn't startn");
                 exit(1);
         }
-#if 1 //get_val() is called from key.c
+#if 1 // if 0 == get_val() is called from key.c
         x = piThreadCreate (pressThr) ;
         if (x != 0){
                 log_prt("timerThread didn't startn");
