@@ -14,7 +14,7 @@
 //#define KEY_CHATTERING_MS 10
 
 #define KEY_INT_USEC	2000
-#define KEY_CHATTERING_NUM	3
+#define KEY_CHATTERING_NUM	2
 
 typedef struct {
 	unsigned char sts;

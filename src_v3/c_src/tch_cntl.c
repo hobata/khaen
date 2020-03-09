@@ -33,6 +33,42 @@ const int32_t	t_lay[][3]= {
 
 void t_init(void);
 
+const int dpg[][3]={
+	{1, 0, 1},
+	{0, 1, 2},
+	{0, 1, 3},
+	{0, 1, 4},
+	{0, 0, 2},
+	{0, 0, 3},
+	{0, 0, 4},
+	{0, 0, 0},
+
+	{1, 1, 0},
+	{1, 0, 0},
+	{1, 1, 3},
+	{1, 0, 3},
+	{1, 0, 2},
+	{1, 1, 4},
+	{1, 1, 3},
+	{1, 1, 2},
+};
+void t_reg_mon(int key)
+{
+  int j;
+  int idx = (key / 10 - 1) * 8 + (key % 10) - 1;
+
+ t_init();
+ printf("monitor key:%d\n", key);
+ t_writeCommand(dpg[idx][0], CS_READ_BUTTON,
+	dpg[idx][1]*0x80 + (0x1 << dpg[idx][2]) );
+ for (j = 0; j < 180; j++){
+   printf("BL:0x%04x, DIFF:0x%04x, RAW:%04x\n",
+    	t_readReg16(dpg[idx][0], CS_READ_BLM),
+    	t_readReg16(dpg[idx][0], CS_READ_DIFFM),
+	t_readReg16(dpg[idx][0], CS_READ_RAWM) );
+   usleep(1000*1000);
+ }
+}
 void t_reg_dump(void)
 {
   int i, addr = 0;
@@ -98,12 +134,31 @@ int pre_t_proc(void)
 	case 1:
 	  t_reg_dump();
           break;
+	case 11:
+	case 12:
+	case 13:
+	case 14:
+	case 15:
+	case 16:
+	case 17:
+	case 18:
+	case 21:
+	case 22:
+	case 23:
+	case 24:
+	case 25:
+	case 26:
+	case 27:
+	case 28:
+	  t_reg_mon(t_func_no);
+          break;
 	case 90:
 	  t_set_prm(0);
           break;
 	case 91:
 	  t_set_prm(1);
           break;
+	case 0:
 	default:
 	  ret = 0;
 	  break;
