@@ -14,8 +14,6 @@
 #include "press.h"
 #include "conf.h"
 #include "khaen.h"
-#include "touch.h"
-#include "pcm.h"
 
 #define MAXFD 64
 #define MAX_KEY_CODE 1
@@ -26,8 +24,6 @@ extern unsigned int rec_size;
 extern unsigned int max_log;
 extern unsigned int ring_buf_enb;
 extern unsigned int stdout_disable;
-extern unsigned int t_func_no;
-extern unsigned int p_func_no;
 extern int pcm_id;
 
 void help(void);
@@ -46,17 +42,6 @@ void destroy(void)
 {
 	conf_destroy();
 }
-void proc_pre_proc(void)
-{
-	if (pre_t_proc()){
-		destroy();
-		exit(0);
-	}
-	if (pre_p_proc()){
-		destroy();
-		exit(0);
-	}
-}
 
 int main(int argc, char *argv[])
 {
@@ -64,7 +49,6 @@ int main(int argc, char *argv[])
 
 	conf_init();
 	get_cmd_opt(argc, argv);
-	proc_pre_proc();
 #if 0
 	/* Now lock all current and future pages 
    	   from preventing of being paged */
@@ -85,7 +69,7 @@ void get_cmd_opt(int argc, char *argv[])
 	int opt;
 	int cnt = 0;
 
-	while ((opt = getopt(argc, argv, "P:t:p:b:r:l:Rsk:")) != -1){
+	while ((opt = getopt(argc, argv, "p:b:r:l:Rsk:")) != -1){
 		cnt++;
 		switch(opt){
 		case 'p':
@@ -124,22 +108,14 @@ void get_cmd_opt(int argc, char *argv[])
 		case 's':
 			stdout_disable = 1;
 			break;
-		case 't':
-			/* not zero */
-			t_func_no = atoi(optarg);
-			break;
-		case 'P':
-			/* not zero */
-			p_func_no = atoi(optarg);
-			break;
 		default: /* '?' */
-			fprintf(stderr, "Usage: %s [-b usec] [-p usec] [-r min] [-l kByte] [-R] [-s] [-t func_no] [-P func_no]\n", argv[0]);
+			fprintf(stderr, "Usage: %s [-b usec] [-p usec] [-r min] [-l kByte] [-R] [-s]\n", argv[0]);
 			help();
 			exit(EXIT_FAILURE);
 		}
 	}
 	if (0==cnt){
-		fprintf(stderr, "Usage: %s [-b usec] [-p usec] [-r min] [-l kByte] [-R] [-s] [-t func_no] [-P func_no]\n", argv[0]);
+		fprintf(stderr, "Usage: %s [-b usec] [-p usec] [-r min] [-l kByte] [-R] [-s]\n", argv[0]);
 		help();
 	}
 }
@@ -152,5 +128,4 @@ void help(void)
 	printf("\tl:log_size(kByte)[32]\n");
 	printf("\tR:log_ring_buffer_enable\n");
 	printf("\ts:stdout_disable\n");
-	printf("\tt:touch_sensor_function_no(not_zero)\n");
 }

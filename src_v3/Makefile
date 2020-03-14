@@ -2,7 +2,7 @@
 
 CC            = gcc
 CFLAGS        = -MMD -Wall -MP -O3 -mtune=native -march=native
-LDFLAGS       = -lrt -lm -lasound -lwiringPi -lconfig
+LDFLAGS       = -lrt -lm -lasound -lwiringPi -lconfig -lsndfile
 LIBS	      =
 INCLUDE = -I ./include
 SRC_DIR = ./c_src

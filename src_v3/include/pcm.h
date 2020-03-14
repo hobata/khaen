@@ -13,6 +13,7 @@
 #define S_SU	1 /* sastain */
 #define S_RE	2 /* release */
 #define WAV_DIR "/home/pi/khaen/wav"	/* wav file folder */
+#define WAV_S_DIR "/home/pi/o_wav"	/* output wav file folder */
 #define STR_MAX 200
 #define PERIOD_SIZE 2048
 #define PCM_NUM 16
@@ -49,5 +50,6 @@ int pcm_init(void);
 int pcm_free(void);
 int pcm_read(int called, int count);
 void pcm_set_key(uint16_t key);
+int pre_p_proc(void);
 
 #endif /* _PCM_H_ */
