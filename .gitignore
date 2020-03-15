@@ -1,3 +1,5 @@
 *.o
 *.d
 khaen
+src_v3/c_src/bak
+src_v3/include/bak

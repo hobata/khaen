@@ -6,7 +6,7 @@
 
 #define MAX_STR 256
 #define LIMIT_NUM       10
-#define LOG_DIR         "/log/"
+#define LOG_DIR         "/home/pi/log/"
 
 #define log_str	log_prt
 

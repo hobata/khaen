@@ -7,7 +7,7 @@
 #define LEN_SIZE 4 /* byte */
 #define MAX_STR 256 /* contain byte size */
 #define REC_LIMIT_NUM       20
-#define REC_DIR         "/rec/"
+#define REC_DIR         "/home/pi/rec/"
 #define REC_NO_FNAME    "./rec_no_"
 #define REC_TIME_MIN	2	/* recoard time in min */
 
