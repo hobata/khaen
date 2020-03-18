@@ -23,12 +23,9 @@
 #define EXPAND_SUS	1500
 
 typedef struct {
-	const char *ad_fn; /* attack & decay */
-	const char *fname; /* sustaion */
-	const char *re_fn; /* release */
+	const int w_idx; /* wav file name index */
 	short *ad_ptr; /* pcm data pointer */
 	short *ptr;
-	short *re_ptr;
 	int sts; /* status */
 	int ad_cnt; /* pcm data num(count) */
 	int cnt;
@@ -40,11 +37,16 @@ typedef struct {
 	int post_loc;
 	int post_cnt;
 	int post_fac;
-	int cross;   /* enable cross fade */
-	int amp;   /* amplitude(100%) */
-	double f_abs; /* actual freq */
-	double f_tgt; /* target freq */
+	const int cross;   /* enable cross fade */
+	const int amp;   /* amplitude(100%) */
+	const double f_tgt; /* target freq */
 } wav_pcm_t;
+
+typedef struct {
+	const char *ad_fn;
+	const char *s_fn;
+	const float freq;
+} wav_fn;
 
 int pcm_init(void);
 int pcm_free(void);

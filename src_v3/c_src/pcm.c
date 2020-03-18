@@ -41,7 +41,7 @@ int read_file2( const char *in_fname, short** pptr, unsigned int* len)
 	char path_wav[STR_MAX + 1];
 
 	sfinfo.format = 0;
-	sprintf(path_wav, "%s/%s", WAV_DIR, in_fname);
+	sprintf(path_wav, "%s/%s.wav", WAV_DIR, in_fname);
 	sprintf(strbuf, "path_wav:%s\n", path_wav);
  	//log_prt(strbuf);
 
@@ -82,7 +82,7 @@ int write_file( const char *out_fname, short* ptr, unsigned int len)
 	int		cnt;
 	char path_wav[STR_MAX + 1];
 
-	sprintf(path_wav, "%s/%s", WAV_S_DIR, out_fname);
+	sprintf(path_wav, "%s/%s.wav", WAV_S_DIR, out_fname);
 	sprintf(strbuf, "path_wav:%s\n", path_wav);
  	//log_prt(strbuf);
 
@@ -185,12 +185,13 @@ int trim2zero(wav_pcm_t* p)
 }
 int freq_calib(wav_pcm_t* p)
 {
-        double rate, pos, shosu, seisu;
+        double rate, pos, shosu, seisu, f_abs;
         int loc, i;
         short *wp, *wp1st, *p_d;
 
-        if ( (p->f_abs <= 0.0)||(p->f_tgt <= 0.0) ) return 0;
-        rate = p->f_tgt / p->f_abs;
+	f_abs = pcm_fn[p->w_idx].freq;
+        if ( (f_abs <= 0.0)||(p->f_tgt <= 0.0) ) return 0;
+        rate = p->f_tgt / f_abs;
         //attack
         loc = (double)p->ad_cnt / rate;
         wp = wp1st = (short*)calloc(loc, sizeof(short));
@@ -277,21 +278,6 @@ int pcm_release(wav_pcm_t *p)
                 //log_prt("change to S_AD\n");
         }
         return ret;
-}
-int pcm_release_old(wav_pcm_t *p)
-{
-	int ret;
-
-	/* playback once */
-	ret = *(p->re_ptr + p->loc);
-	(p->loc)++;
-	/* release is finished */
-	if (p->loc >= p->re_cnt){
-		p->sts = S_AD;
-		p->loc = 0;
-		//log_prt("change to S_AD\n");
-	} 
-	return ret;
 }
 int pcm_sustain(wav_pcm_t *p)
 {
@@ -443,58 +429,6 @@ int pcm_read(int called, int count)
 
 	return pcm_read_each(key, fac);
 }
-int read_file( const char *in_fname, short** pptr, unsigned int* len)
-{
-    FILE *fp;
-    struct stat stbuf;
-    int fd;
-    char path_wav[STR_MAX + 1];
-
-    sprintf(path_wav, "%s/%s", WAV_DIR, in_fname);
-    sprintf(strbuf, "path_wav:%s\n", path_wav);
-    //log_prt(strbuf);
-
-    fd = open(path_wav, O_RDONLY);
-    if (fd == -1) {
-        sprintf(strbuf, "can't open file : %s.\n", in_fname);
-        log_prt("can't open file : %s.\n", in_fname);
-	return -1;
-    }
-    fp = fdopen(fd, "rb");
-    if (fp == NULL){
-        log_prt("can't open file : %s.\n", in_fname);
-	return -2;
-    }
-    if (fstat(fd, &stbuf) == -1){
-        log_prt("cant get file state : %s.\n", in_fname);
-	return -3;
-    }
-    *len = stbuf.st_size - HEADER_SIZE;
-
-    //log_prt("before:calloc\n");
-    *pptr = calloc( *len, 1 );   
-    if  (*pptr == NULL){
-	log_prt("pcm.c calloc err\n");
-        fclose(fp);
-        return -4;
-    }
-    //log_prt("after:calloc\n");
-    fd = fseek(fp, HEADER_SIZE, SEEK_SET);
-    if (fd == -1 ){
-        log_prt("cant fseek: %s.\n", in_fname);
-        return -5;
-    }
-    //log_prt("before:fread\n");
-    fd = fread(*pptr, 1, *len, fp);
-    if (fd < *len){
-        log_prt("cant get all file data: %s.\n", in_fname);
-        return -6;
-    }
-
-    fclose(fp);
-    //printf("calloc:%p\n", *pptr );
-    return 0;
-}
 
 int pcm_free(void)
 {
@@ -509,10 +443,6 @@ int pcm_free(void)
 		p = &mix_wav[i];
 		free(p->ptr);
 		free(p->ad_ptr);
-#if 0
-		free(p->re_ptr);
-#endif
-		p->fname = NULL;
 	}
 	return 0;
 }
@@ -605,49 +535,26 @@ int pcm_init(void)
 	for (i = 0; i < PCM_NUM; i++){
 		//printf("pcm_init:i=%d\n", i);
 		p = &mix_wav[i];
-		if (p->fname != NULL){
-			ret = read_file2(p->fname, &p->ptr, &len );
-		}else{	/* no file name */
-			ret = 0;
-			len = 0; 
-		}
+		ret = read_file2(pcm_fn[p->w_idx].s_fn, &p->ptr, &len );
 		if (0 > ret ){
-			log_prt("error:%d, %s\n", ret, p->fname);
+			log_prt("s_fn:error:%d, %d\n", i, ret );
 			exit(1);
 		}
 		p->cnt = len;
                 amp(p->ptr, p->cnt, p->amp);
 
-		if (p->ad_fn != NULL){
-			ret = read_file2(p->ad_fn, &p->ad_ptr, &len );
-		}else{	/* no file name */
-			ret = 0;
-			len = 0; 
-		}
+		ret = read_file2(pcm_fn[p->w_idx].ad_fn, &p->ad_ptr, &len );
 		if (0 > ret ){
-			log_prt("error:%d, %s\n", ret, p->ad_fn);
+			log_prt("ad_fn:error:%d, %d\n", i, ret);
 			exit(-1);
 		}
 		p->ad_cnt = len;
                 amp(p->ad_ptr, p->ad_cnt, p->amp);
-#if 0
-		if (p->re_fn != NULL){
-			ret = read_file2(p->re_fn, &p->re_ptr, &len );
-		}else{	/* no file name */
-			ret = 0;
-			len = 0; 
-		}
-		if (0 > ret ){
-			log_prt("error:%d, %s\n", ret, p->re_fn);
-			exit(-1);
-		}
-		p->re_cnt = len;
-                amp(p->re_ptr, p->re_cnt, p->amp);
-#else
+
  		/* Relase data are produced from sustain data */
                 /* 440Hz sample in std time, low freq => long */
                 p->re_cnt = SAMPLES_PER_MSEC*200*(440.0/p->f_tgt);
-#endif
+
 		if (p->cross){
 			normalize(p);
 			cross_fade(p);
@@ -667,8 +574,8 @@ void p_save_raw(void)
 
         for (i = 0; i < PCM_NUM; i++, p++){
                 //printf("pcm_save_raw:i=%d\n", i);
-                write_file(p->fname, p->ptr, p->cnt );
-                write_file(p->ad_fn, p->ad_ptr, p->ad_cnt );
+                write_file(pcm_fn[p->w_idx].ad_fn, p->ad_ptr, p->ad_cnt );
+                write_file(pcm_fn[p->w_idx].s_fn, p->ptr, p->cnt );
         }
 }
 

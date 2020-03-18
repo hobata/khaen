@@ -2,6 +2,15 @@
 
 sudo /opt/vc/bin/tvservice -o
 
+# "ip exist -> not start khaen"	
+ex=$(ip link | grep BROADCAST | wc -l)
+#echo $ex
+
+if test "$ex" == "1"; then
+	#echo "ip exist -> not start khaen"	
+	exit
+fi
+
 while [ 1 -eq 1 ] ; do
 ex=$(ps -e | grep khaen | head -1)
 #echo "$ex"
