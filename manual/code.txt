@@ -1,0 +1,7 @@
+0	Am
+1	Fm
+2	Bm
+3	Cm
+4	Dm
+5	Em
+6	Gm
