@@ -90,6 +90,12 @@ void t_reg_dump(void)
     printf("\n");
   }
 }
+void t_check_unlock(int i)
+{
+  t_init();
+  printf("t_check_unlock: dev:%d\n", i);
+  t_checkUnlock(t_fd[i]);
+}
 void t_set_prm(int i)
 {
   t_init();
@@ -157,6 +163,12 @@ int pre_t_proc(void)
           break;
 	case 91:
 	  t_set_prm(1);
+          break;
+	case 990:
+	  t_check_unlock(0);
+          break;
+	case 991:
+	  t_check_unlock(1);
           break;
 	case 0:
 	default:

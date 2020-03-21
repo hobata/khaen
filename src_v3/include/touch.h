@@ -118,6 +118,8 @@ enum CY8_RegisterMap
 
   uint8_t t_readReg(int fd, uint8_t reg);
   void t_selectBtn(int fd, uint8_t port, uint8_t gpx);
+
+  void t_checkUnlock(int fd);
   
   // Read status
   uint8_t t_readStatus(int fd, uint8_t port);

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <wiringPiI2C.h>
+#include <i2c/smbus.h>
 #include "touch.h"
 
 int t_i2cinit(int addr)
@@ -90,39 +91,46 @@ uint8_t t_getGpioEnb1(int fd )
 {
   return (uint8_t)wiringPiI2CReadReg8 (fd, GPIO_ENABLE1);
 }
-
-#if 0
-void t_changeI2CAddress(int fd, uint8_t old_addr, uint8_t new_addr)
+void t_checkUnlock(int fd)
 {
-  int unlock[3] = {0x3C, 0xA5, 0x69};
-  int   lock[3] = {0x96, 0x5A, 0xC3};
-  int i, ret;
+  const unsigned char unlock[] = {0x3C, 0xA5, 0x69};
 
   // unlock
-  wiringPiI2CWrite(fd, I2C_DEV_LOCK);
-  usleep(1000);
-  for (i=0; i<3; i++){
-    wiringPiI2CWrite(fd, *(unlock+i));
-    usleep(1000);
-  }
-  printf("unlock:0x%02x\n", 
+  printf("write ret:%d\n",
+    i2c_smbus_write_i2c_block_data(fd, I2C_DEV_LOCK, 0x3, unlock) );
+  usleep(200);
+  printf("I2C_DEV_LOCK:0x%02x\n", 
   	wiringPiI2CReadReg8(fd, I2C_DEV_LOCK) );
+} 
+void t_checkLock(int fd)
+{
+  const unsigned char lock[3] = {0x96, 0x5A, 0xC3};
+
+  // lock
+  printf("write ret:%d\n",
+    i2c_smbus_write_i2c_block_data(fd, I2C_DEV_LOCK, 0x3, lock) );
+  usleep(200);
+  printf("I2C_DEV_LOCK:0x%02x\n", 
+  	wiringPiI2CReadReg8(fd, I2C_DEV_LOCK) );
+} 
+void t_changeI2CAddress(int fd, uint8_t old_addr, uint8_t new_addr)
+{
+  printf("Before:I2C_ADDR_DM:0x%02x\n", 
+  	wiringPiI2CReadReg8(fd, I2C_ADDR_DM) );
+
+  // unlock
+  t_checkUnlock(fd);
 
   // change address and i2c_open_drain
   t_writeCommand(fd, I2C_ADDR_DM, (0b10000000|new_addr));
   usleep(1000);
 
   // lock
-  wiringPiI2CWrite(fd, I2C_DEV_LOCK);
-  usleep(1000);
-  for (i=0; i<3; i++){
-    wiringPiI2CWrite(fd, *(lock+i));
-    usleep(1000);
-  }
-  printf("Lock:0x%02x\n", 
- 	wiringPiI2CReadReg8(fd, I2C_DEV_LOCK) );
+  t_checkLock(fd);
+
+  printf("after:I2C_ADDR_DM:0x%02x\n", 
+  	wiringPiI2CReadReg8(fd, I2C_ADDR_DM) );
 }
-#endif
 
 void t_enterSetupMode(int fd )
 {

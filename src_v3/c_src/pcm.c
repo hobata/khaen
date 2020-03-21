@@ -574,8 +574,8 @@ void p_save_raw(void)
 
         for (i = 0; i < PCM_NUM; i++, p++){
                 //printf("pcm_save_raw:i=%d\n", i);
-                write_file(pcm_fn[p->w_idx].ad_fn, p->ad_ptr, p->ad_cnt );
-                write_file(pcm_fn[p->w_idx].s_fn, p->ptr, p->cnt );
+                write_file(pcm_fn[i].ad_fn, p->ad_ptr, p->ad_cnt );
+                write_file(pcm_fn[i].s_fn, p->ptr, p->cnt );
         }
 }
 
