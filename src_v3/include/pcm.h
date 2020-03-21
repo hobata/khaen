@@ -20,7 +20,7 @@
 #define PCM_LOCK 3
 #define SAMPLES_PER_MSEC	48
 #define PEAK_SMP 250
-#define EXPAND_SUS	1500
+#define EXPAND_SUS	150
 
 typedef struct {
 	const int w_idx; /* wav file name index */
@@ -32,11 +32,9 @@ typedef struct {
 	int re_cnt;
 	int re_dcnt; /* dynamic count */
 	int loc; /* data location(offset) */
+	int re_1stloc; /* 1st data location for release(offset) */
 	int fac_rel; /* factor at release */
 	int prev_on; /* key previous state */
-	int post_loc;
-	int post_cnt;
-	int post_fac;
 	const int cross;   /* enable cross fade */
 	const int amp;   /* amplitude(100%) */
 	const double f_tgt; /* target freq */

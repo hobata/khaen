@@ -32,22 +32,20 @@ unsigned int p_func_no = 0;
 
 #include "pcm_data.h"
 
+int p_pcm_get(void);
+
 int read_file2( const char *in_fname, short** pptr, unsigned int* len)
 /* Note:len is samples */
 {
 	SNDFILE		*sfp;
 	SF_INFO		sfinfo;
 	int		cnt;
-	char path_wav[STR_MAX + 1];
 
 	sfinfo.format = 0;
-	sprintf(path_wav, "%s/%s.wav", WAV_DIR, in_fname);
-	sprintf(strbuf, "path_wav:%s\n", path_wav);
- 	//log_prt(strbuf);
 
-	sfp = sf_open(path_wav, SFM_READ, &sfinfo);
+	sfp = sf_open(in_fname, SFM_READ, &sfinfo);
 	if (sfp == NULL){
-		log_prt("sf_open(%s) err\n", path_wav);
+		log_prt("sf_open(%s) err\n", in_fname);
 		return -1;
 	}
 #if 0
@@ -82,7 +80,7 @@ int write_file( const char *out_fname, short* ptr, unsigned int len)
 	int		cnt;
 	char path_wav[STR_MAX + 1];
 
-	sprintf(path_wav, "%s/%s.wav", WAV_S_DIR, out_fname);
+	sprintf(path_wav, "%s%d/%s.wav", WAV_S_DIR, pcm_id, out_fname);
 	sprintf(strbuf, "path_wav:%s\n", path_wav);
  	//log_prt(strbuf);
 
@@ -104,23 +102,6 @@ int write_file( const char *out_fname, short* ptr, unsigned int len)
 	sf_close(sfp);
 	return 0;
 }
-
-#if 0
-#define F_IN	"in.wav"
-#define F_OUT	"out.wav"
-int main(void)
-{
-	short *ptr;
-	unsigned int len;
-
-	printf("read:%d\n", read_file( F_IN, &ptr, &len) );
-	printf("write:%d\n", write_file( F_OUT, ptr, len) );
-	free(ptr);
-	
-	return 0;
-}
-#endif
-
 
 short lag(int loc, double seisu, short *p_d, double shosu)
 {
@@ -262,7 +243,8 @@ int pcm_release(wav_pcm_t *p)
 
 #if 1
         /* fac is dynamic */
-        fac_dyn = ((double)p->fac_rel * (p->re_dcnt - p->loc)) / p->re_dcnt;
+        fac_dyn = ((double)p->fac_rel *
+	  (p->re_dcnt - (p->loc - p->re_1stloc))) / p->re_dcnt;
 #else
          /* convert from power ratio to amplitude (dynamic) */
          fac_dyn = (double)p->fac_rel *
@@ -272,7 +254,7 @@ int pcm_release(wav_pcm_t *p)
         ret = *(p->ptr + (p->loc % p->cnt) ) * fac_dyn;
         (p->loc)++;
         /* release is finished */
-        if (p->loc >= p->re_dcnt){
+        if (p->loc >= p->re_dcnt + p->re_1stloc){
                 p->sts = S_AD;
                 p->loc = 0;
                 //log_prt("change to S_AD\n");
@@ -317,8 +299,8 @@ int pcm_read_each(uint16_t key, double fac)
 		if(p->prev_on == S_ON && onoff == S_OFF){
 			/* status release */
 			p->sts = S_RE;
-			/* continue location */
-			/* p->loc = 0; */
+			/* keep 1st location */
+			p->re_1stloc = p->loc;
 			/* loud tone has long release time */
 			p->fac_rel = fac;
 			/* get release count(length) */
@@ -490,9 +472,9 @@ int cross_fade(wav_pcm_t* p)
     // attack and decay
     short* sp;
     sp = calloc( p->ad_cnt + (p->cnt >> 1), 2 ); // ad + half of sustain
-    memcpy(sp, p->ad_ptr, p->ad_cnt << 1); //copy from ad
+    memcpy(sp, p->ad_ptr, p->ad_cnt<<1); //copy from ad
     free(p->ad_ptr);
-    memcpy(sp + p->ad_cnt, p->ptr, p->cnt); // half of sustain
+    memcpy(sp + p->ad_cnt, p->ptr, p->cnt); //(short*, ..)half of sustain
     p->ad_ptr = sp;
     p->cnt >>= 1; // make half 
     p->ad_cnt += p->cnt; // + half of sustain
@@ -524,6 +506,44 @@ int pcm_init(void)
 	int i;
 	int ret = 0;
 	unsigned int len;
+	char path_wav[STR_MAX + 1];
+
+	wav_pcm_t *p;
+
+	log_prt("key code(Am, Fm, etc):%d\n", pcm_id);
+	mix_wav = pcm_data[pcm_id];
+
+	log_prt("pcm_init:pcm_id=%d\n", pcm_id);
+	for (i = 0; i < PCM_NUM; i++){
+		//printf("pcm_init:i=%d\n", i);
+		p = &mix_wav[i];
+	        sprintf(path_wav, "%s%d/%s.wav",
+		  WAV_S_DIR, pcm_id, pcm_fn[p->w_idx].s_fn);
+		ret = read_file2(path_wav, &p->ptr, &len );
+		if (0 > ret ){
+			log_prt("s_fn:error:%d, %d\n", i, ret );
+			exit(1);
+		}
+		p->cnt = len;
+
+	        sprintf(path_wav, "%s%d/%s.wav",
+		  WAV_S_DIR, pcm_id, pcm_fn[p->w_idx].ad_fn);
+		ret = read_file2(path_wav, &p->ad_ptr, &len );
+		if (0 > ret ){
+			log_prt("ad_fn:error:%d, %d\n", i, ret);
+			exit(-1);
+		}
+		p->ad_cnt = len;
+	}
+	log_prt("pcm:init end\n");
+	return 0;
+}
+int p_pcm_get(void)
+{
+	int i;
+	int ret = 0;
+	unsigned int len;
+        char path_wav[STR_MAX + 1];
 
 	wav_pcm_t *p;
 
@@ -533,9 +553,11 @@ int pcm_init(void)
 	mix_wav = pcm_data[pcm_id];
 
 	for (i = 0; i < PCM_NUM; i++){
-		//printf("pcm_init:i=%d\n", i);
+		//printf("pcm_get:i=%d\n", i);
 		p = &mix_wav[i];
-		ret = read_file2(pcm_fn[p->w_idx].s_fn, &p->ptr, &len );
+        	sprintf(path_wav, "%s/%s.wav",
+		  WAV_DIR, pcm_fn[p->w_idx].s_fn);
+		ret = read_file2(path_wav, &p->ptr, &len );
 		if (0 > ret ){
 			log_prt("s_fn:error:%d, %d\n", i, ret );
 			exit(1);
@@ -543,7 +565,9 @@ int pcm_init(void)
 		p->cnt = len;
                 amp(p->ptr, p->cnt, p->amp);
 
-		ret = read_file2(pcm_fn[p->w_idx].ad_fn, &p->ad_ptr, &len );
+        	sprintf(path_wav, "%s/%s.wav",
+		  WAV_DIR, pcm_fn[p->w_idx].ad_fn);
+		ret = read_file2(path_wav, &p->ad_ptr, &len );
 		if (0 > ret ){
 			log_prt("ad_fn:error:%d, %d\n", i, ret);
 			exit(-1);
@@ -553,15 +577,19 @@ int pcm_init(void)
 
  		/* Relase data are produced from sustain data */
                 /* 440Hz sample in std time, low freq => long */
-                p->re_cnt = SAMPLES_PER_MSEC*200*(440.0/p->f_tgt);
+                p->re_cnt = SAMPLES_PER_MSEC*200*(440.0/fabs(p->f_tgt));
 
 		if (p->cross){
 			normalize(p);
 			cross_fade(p);
 		}
 		freq_calib(p);
+#if 1
+		if (0==(p->cross)){
+			cross_fade(p);
+		}
+#endif
 	}
-	log_prt("pcm:init end\n");
 	return 0;
 }
 void p_save_raw(void)
@@ -569,13 +597,12 @@ void p_save_raw(void)
         int i;
         wav_pcm_t *p;
 
-        pcm_init();
         p = &mix_wav[0];
 
         for (i = 0; i < PCM_NUM; i++, p++){
                 //printf("pcm_save_raw:i=%d\n", i);
-                write_file(pcm_fn[i].ad_fn, p->ad_ptr, p->ad_cnt );
-                write_file(pcm_fn[i].s_fn, p->ptr, p->cnt );
+                write_file(pcm_fn[p->w_idx].ad_fn, p->ad_ptr, p->ad_cnt );
+                write_file(pcm_fn[p->w_idx].s_fn, p->ptr, p->cnt );
         }
 }
 
@@ -585,7 +612,11 @@ int pre_p_proc(void)
 
         switch(p_func_no){
         case 1:
-          p_save_raw();
+	  for (pcm_id=0; pcm_id <= 6; pcm_id++){
+            p_pcm_get();
+            p_save_raw();
+	    pcm_free();
+	  }
           break;
         default:
           ret = 0;
