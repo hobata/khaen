@@ -1,1 +1,1 @@
-apt-get install bc libasound2-dev wiringpi libconfig-dev i2ctools libsndfile1-dev
+apt-get install bc libasound2-dev wiringpi libconfig-dev libi2c-dev libsndfile1-dev
