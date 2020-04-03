@@ -62,6 +62,17 @@ enum CY8_RegisterMap
   CS_FINGER_TH_13 = 0x69,
   CS_FINGER_TH_14 = 0x6A,
 
+  CS_IDAC_00=	0x6B,
+  CS_IDAC_01=	0x6c,
+  CS_IDAC_02=	0x6d,
+  CS_IDAC_03=	0x6e,
+  CS_IDAC_04=	0x6f,
+  CS_IDAC_10=	0x70,
+  CS_IDAC_11=	0x71,
+  CS_IDAC_12=	0x72,
+  CS_IDAC_13=	0x73,
+  CS_IDAC_14=	0x74,
+
   DEVICE_ID = 0x7A,
   DEVICE_STATUS = 0x7B,
   I2C_ADDR_DM = 0x7C,
@@ -81,6 +92,7 @@ enum CY8_RegisterMap
   COMMAND_REG = 0xA0,
 };
 ///
+  #define IDAC_DEF	0x0a
 
   // Low level commands
   int t_i2cinit(int fd);

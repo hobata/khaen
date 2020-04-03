@@ -31,6 +31,14 @@ int led_set(unsigned char no, unsigned char value)
 	return 0;
 }
 
+int led_free(void)
+{
+	int i;
+        for (i=1; i<=3; i++){
+                led_set(i, LED_OFF);
+        }
+	return 0;
+}
 int led_init(void)
 {
 	int i;

@@ -1,0 +1,34 @@
+IDAC setting default 0xa
+CS_SETL_TIME default 0xa0
+
+
+
+button operation
+
+R:red
+Y:yellow
+G:green
+W:white
+
+right keys
+0:R1 to 7:R8
+
+----------------------
+manual calibration:
+ R
+----------------------
+keyboard mode:
+ Enter:Y, return:Y
+----------------------
+set drone(sound):
+ Y, R, 0 to 6
+----------------------
+change code:
+ Y, G, 0 to 6
+----------------------
+record pcm file:
+ rec_start:G, save:G
+----------------------
+shutdown:
+ W -> LED_OFF, SLIDE_SW OFF
+----------------------

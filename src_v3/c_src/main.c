@@ -22,7 +22,7 @@
 
 extern unsigned int period_time;
 extern unsigned int buffer_time;
-extern unsigned int rec_size;
+extern unsigned int rec_num;
 extern unsigned int max_log;
 extern unsigned int ring_buf_enb;
 extern unsigned int stdout_disable;
@@ -101,9 +101,9 @@ void get_cmd_opt(int argc, char *argv[])
 			}
 			break;
 		case 'r':
-			rec_size = 48000*60*atoi(optarg);
-			if (0==rec_size){
-				rec_size = 48000*60*2;
+			rec_num = 48000*60*atoi(optarg);
+			if (0==rec_num){
+				rec_num = 48000*60*2; /* 2min */
 			}
 			break;
 		case 'l':

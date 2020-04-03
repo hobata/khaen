@@ -14,7 +14,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <wiringPiI2C.h>
+
+#if 0
 #include <i2c/smbus.h>
+#else
+#include <linux/i2c-dev.h>
+#endif
+
 #include "touch.h"
 
 int t_i2cinit(int addr)

@@ -1,7 +1,8 @@
 # Makefile for khaen
 
 CC            = gcc
-CFLAGS        = -MMD -Wall -MP -O3 -mtune=native -march=native
+#CFLAGS        = -MMD -Wall -MP -O3 -mtune=native -march=native
+CFLAGS        = -MMD -Wall -MP -O3
 LDFLAGS       = -lrt -lm -lasound -lwiringPi -lconfig -lsndfile
 LIBS	      =
 INCLUDE = -I ./include

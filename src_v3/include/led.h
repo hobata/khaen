@@ -20,6 +20,7 @@
 #define LED_UNSHI	3
 
 int led_init(void);
+int led_free(void);
 int led_set(unsigned char no, unsigned char on_off);
 
 #endif /* _LED_H_ */

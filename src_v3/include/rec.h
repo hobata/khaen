@@ -9,7 +9,7 @@
 #define REC_LIMIT_NUM       20
 #define REC_DIR         "/home/pi/rec/"
 #define REC_NO_FNAME    "./rec_no_"
-#define REC_TIME_MIN	2	/* recoard time in min */
+#define REC_TIME_MIN	2	/* record time in min */
 
 
 void rec_init(void);

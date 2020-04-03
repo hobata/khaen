@@ -51,5 +51,7 @@ int pcm_free(void);
 int pcm_read(int called, int count);
 void pcm_set_key(uint16_t key);
 int pre_p_proc(void);
+int write_file( const char *out_fname, short* ptr, unsigned int len);
+
 
 #endif /* _PCM_H_ */

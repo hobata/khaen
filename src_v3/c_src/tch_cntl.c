@@ -125,6 +125,18 @@ void t_set_prm(int i)
   	t_writeCommand(t_fd[i], CS_FINGER_TH_13, 0x32);
   	t_writeCommand(t_fd[i], CS_FINGER_TH_14, 0x32);
 
+	// set IDAC
+	t_writeCommand(t_fd[i], CS_IDAC_00, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_01, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_02, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_03, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_04, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_10, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_11, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_12, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_13, IDAC_DEF);
+	t_writeCommand(t_fd[i], CS_IDAC_14, IDAC_DEF);
+
   	t_saveToFlash(t_fd[i]);
   	usleep(120*1000);
   	t_softwareReset(t_fd[i]);

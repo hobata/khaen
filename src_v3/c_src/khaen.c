@@ -17,6 +17,7 @@
 #include "press.h"
 #include "khaen.h"
 #include "log.h"
+#include "led.h"
 #include "rec.h"
 #include "midi.h"
 
@@ -330,6 +331,7 @@ static int write_and_poll_loop(snd_pcm_t *handle,
 				snd_pcm_drop(handle);
 				log_prt("\nTerminated2\n");
 				munlockall();
+				led_free();
 				pcm_free();
 				rec_free();
 				midi_free();

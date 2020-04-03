@@ -18,7 +18,7 @@
 #include "key.h"
 #include "rec.h"
 #include "pcm.h"
-#include "cos_tbl.h"
+//#include "cos_tbl.h"
 #include "cmp.h"
 #include "midi.h"
 
