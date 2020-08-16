@@ -23,7 +23,7 @@
 #define EXPAND_SUS	150
 
 typedef struct {
-	const int w_idx; /* wav file name index */
+	int w_idx; /* wav file name index */
 	short *ad_ptr; /* pcm data pointer */
 	short *ptr;
 	int sts; /* status */
@@ -35,9 +35,9 @@ typedef struct {
 	int re_1stloc; /* 1st data location for release(offset) */
 	int fac_rel; /* factor at release */
 	int prev_on; /* key previous state */
-	const int cross;   /* enable cross fade */
-	const int amp;   /* amplitude(100%) */
-	const double f_tgt; /* target freq */
+	int cross;   /* enable cross fade */
+	int amp;   /* amplitude(100%) */
+	double f_tgt; /* target freq */
 } wav_pcm_t;
 
 typedef struct {

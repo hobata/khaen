@@ -107,6 +107,12 @@ int pcm_init(void)
 			exit(-1);
 		}
 		p->ad_cnt = len;
+		/* Relase data are produced from sustain data */
+                /* 440Hz sample in std time, low freq => long */
+                p->re_cnt = SAMPLES_PER_MSEC
+                             *( 50 + 100*(440.0/abs(p->f_tgt)) );
+                //             *( 100 + 200*(440.0/(p->f_tgt)) );
+
 	}
 	log_prt("pcm:init end\n");
 	return 0;

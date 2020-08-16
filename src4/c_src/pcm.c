@@ -98,6 +98,7 @@ int pcm_read_each(uint16_t key, double fac)
 {
 	int i, cnt = 0, ret = 0, ret_rel = 0;
 	int onoff;
+	static wav_pcm_t pcm_prev[16]; //remain release state
 
 	wav_pcm_t *p = &mix_wav[0];
 	for (i = 0; i < PCM_NUM; i++){
@@ -113,8 +114,9 @@ int pcm_read_each(uint16_t key, double fac)
 			/* get release count(length) */
 #if 1
 			/* duration after key off */
-			p->re_dcnt = p->re_cnt *
-				( (fac < 256)? 1.0 : ((double)fac / 256));
+			p->re_dcnt = p->re_cnt;
+			//p->re_dcnt = p->re_cnt *
+			//	( (fac < 256)? 1.0 : ((double)fac / 256));
 			/* upper limit */
 			if ( p->re_dcnt > SAMPLES_PER_MSEC * 400 ){
                                 p->re_dcnt = SAMPLES_PER_MSEC * 400;
@@ -128,14 +130,27 @@ int pcm_read_each(uint16_t key, double fac)
 		if (onoff == S_ON){
 			switch(p->sts){
 			case S_AD:
+			  //remain release
+			  if (pcm_prev[i].sts == S_RE){
+				ret_rel += pcm_release(&(pcm_prev[i]));
+			  }
+			  //attack & decay
 			  ret += pcm_attack_decay(p);
 			  cnt++;
 			  break;
 			case S_SU:
+			  //remain release
+			  if (pcm_prev[i].sts == S_RE){
+				ret_rel += pcm_release(&(pcm_prev[i]));
+			  }
+			  //keep sustatin
 			  ret += pcm_sustain(p);
 			  cnt++;
 			  break;
 			case S_RE:
+			  pcm_prev[i] = *p; //backup of release state
+			  ret_rel += pcm_release(p);
+			  //change status
 			  p->sts = S_AD;
 			  p->loc = 0;
 			  ret += pcm_attack_decay(p);
